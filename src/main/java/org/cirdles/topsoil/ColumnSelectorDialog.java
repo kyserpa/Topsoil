@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -33,17 +34,20 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
+import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import netscape.javascript.JSObject;
 import org.cirdles.topsoil.builder.TopsoilBuilderFactory;
-import org.cirdles.topsoil.chart.concordia.ErrorEllipseChartExtendedPanel;
+import org.cirdles.topsoil.chart.concordia.ErrorEllipse;
 import org.cirdles.topsoil.chart.concordia.RecordToErrorEllipseConverter;
 import org.cirdles.topsoil.table.Field;
 import org.cirdles.topsoil.table.NumberField;
@@ -227,17 +231,38 @@ public class ColumnSelectorDialog extends Dialog {
             converter.setExpressionTypeSigmaY(columnSelector.getSigmaYExpressionType());
 
             Series<Number, Number> series = new Series<>();
+            ErrorEllipse[] data = new ErrorEllipse[table.getItems().size()];
+            int i = 0;
 
             for (Record record : table.getItems()) {
                 series.getData().add(new Data<>(0, 0, record));
+                data[i++] = converter.convert(new Data<>(0, 0, record));
             }
 
-            ErrorEllipseChartExtendedPanel ccExtendedPanel = new ErrorEllipseChartExtendedPanel();
-            ccExtendedPanel.getChart().setConverter(converter);
-            ccExtendedPanel.getChart().getData().add(series);
-            VBox.setVgrow(ccExtendedPanel.getMasterDetailPane(), Priority.ALWAYS);
+            WebView chart = new WebView();
+            WebEngine engine = chart.getEngine();
 
-            Scene scene = new Scene(ccExtendedPanel, 1200, 800);
+            engine.setOnError(event -> System.err.println(event.getMessage()));
+            engine.setOnAlert(event -> System.out.println(event.getData()));
+
+            engine.getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
+                @Override
+                public void changed(ObservableValue<? extends Worker.State> observable, Worker.State oldValue, Worker.State newValue) {
+                    if (newValue.equals(Worker.State.SUCCEEDED)) {
+                        JSObject window = (JSObject) engine.executeScript("window");
+
+                        window.setMember("data", data);
+                        engine.executeScript("fitPlot();");
+                    }
+                }
+            });
+
+            Button fitPlot = new Button("Fit Plot");
+            fitPlot.setOnAction(event -> engine.executeScript("fitPlot();"));
+
+            engine.load(getClass().getResource("../../../web/concordia.html").toExternalForm());
+
+            Scene scene = new Scene(new VBox(chart, fitPlot), 1200, 800);
             Stage chartStage = new Stage();
             chartStage.setScene(scene);
             chartStage.show();

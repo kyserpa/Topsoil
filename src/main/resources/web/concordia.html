@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+    body { font: 10px sans-serif; }
+
+    .axis path, .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+
+    .axis .label { text-anchor: end; }
+    .dot { stroke: #000; }
+
+    .ellipse {
+        fill: red;
+        fill-opacity: 0.3;
+        stroke: black;
+    }
+
+    .concordia {
+        fill: none;
+        stroke: blue;
+        stroke-width: 2;
+    }
+
+    #plotArea {
+        fill: white;
+        stroke: none;
+    }
+
+</style>
+<body>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="numeric-1.2.6.js"></script>
+    <script>
+        function newtonMethod(f, fPrime, value) {
+            if (typeof value !== "undefined") {
+                oldF = f;
+                f = function(x) {
+                    return oldF(x) - value;
+                };
+            }
+
+            var x0, x1 = 1;
+
+            while (fPrime(x1) === 0) {
+                x1 += Math.random();
+            }
+
+            for (var i = 0; i < 200; i++) {
+                x0 = x1;
+
+                if (Math.abs(fPrime(x0)) < Number.EPSILON) {
+                    break;
+                }
+
+                x1 -= f(x0) / fPrime(x0);
+            }
+
+            return x1;
+        }
+
+        var margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        var x = d3.scale.linear()
+            .range([0, width]);
+
+        var y = d3.scale.linear()
+            .range([height, 0]);
+
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+
+        var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var plotArea = svg.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("id", "plotArea");
+
+        var clipPath = svg.append("defs").append("clipPath")
+            .attr("id", "clipBox");
+
+        clipPath.append("use")
+            .attr("xlink:href", "#" + plotArea.attr("id"));
+
+        function cubicBezier(path, p1, p2, p3) {
+            path.push("C", p1[0],
+                ",", p1[1],
+                ",", p2[0],
+                ",", p2[1],
+                ",", p3[0],
+                ",", p3[1]);
+        }
+
+        function update(data) {
+            var xAxisLabel = "207Pb*/235U",
+                yAxisLabel = "206Pb*/238U";
+
+            var concordia = svg.selectAll(".concordia")
+                .data([0]);
+
+            var ellipses = svg.selectAll(".ellipse")
+                .data(data);
+
+            var dots = svg.selectAll(".dot")
+                .data(data);
+
+            // enter
+            concordia.enter().append("path")
+                .attr("class", "concordia")
+                .attr("clip-path", "url(#" + clipPath.attr("id") + ")");
+
+            ellipses.enter().append("path")
+                .attr("class", "ellipse")
+                .attr("clip-path", "url(#" + clipPath.attr("id") + ")");
+
+            dots.enter().append("circle")
+                .attr("class", "dot")
+                .attr("r", 1.5)
+                .attr("clip-path", "url(#" + clipPath.attr("id") + ")");
+
+            svg.selectAll(".x.axis").data([xAxisLabel])
+                .enter().append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .append("text")
+                .attr("class", "label")
+                .attr("x", width)
+                .attr("y", -6)
+                .text(function(d) {
+                    return d;
+                });
+
+            svg.selectAll(".y.axis").data([yAxisLabel])
+                .enter().append("g")
+                .attr("class", "y axis")
+                .append("text")
+                .attr("class", "label")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .text(function(d) {
+                    return d;
+                });
+
+            // update + enter
+            concordia.attr("d", function() {
+                var LAMBDA_235 = 9.8485e-10;
+                var LAMBDA_238 = 1.55125e-10;
+
+                var wetherillX = function(t) {
+                    return Math.exp(LAMBDA_235 * t) - 1;
+                },
+                    wetherillY = function(t) {
+                        return Math.exp(LAMBDA_238 * t) - 1;
+                    },
+                    wetherillXPrime = function(t) {
+                        return LAMBDA_235 * Math.exp(LAMBDA_235 * t);
+                    },
+                    wetherillYPrime = function(t) {
+                        return LAMBDA_238 * Math.exp(LAMBDA_238 * t);
+                    };
+
+                var minT = Math.max(newtonMethod(wetherillX, wetherillXPrime, x.domain()[0]),
+                    newtonMethod(wetherillY, wetherillYPrime, y.domain()[0])),
+                    maxT = Math.min(newtonMethod(wetherillX, wetherillXPrime, x.domain()[1]),
+                        newtonMethod(wetherillY, wetherillYPrime, y.domain()[1]));
+
+                var path = ["M", x(wetherillX(minT)), ",", y(wetherillY(minT))];
+                cubicBezier(path, [x(wetherillX(minT) + wetherillXPrime(minT) * (maxT - minT) / 3),
+                    y(wetherillY(minT) + wetherillYPrime(minT) * (maxT - minT) / 3)],
+                    [x(wetherillX(maxT) - wetherillXPrime(maxT) * (maxT - minT) / 3),
+                        y(wetherillY(maxT) - wetherillYPrime(maxT) * (maxT - minT) / 3)],
+                    [x(wetherillX(maxT)), y(wetherillY(maxT))]);
+
+                return path.join("");
+            });
+
+            ellipses.attr("d", function(d) {
+                var k = 4 / 3 * (Math.sqrt(2) - 1);
+                var r = [[d.getSigmaX(), d.getRho() * d.getSigmaY()],
+                    [0, d.getSigmaY() * Math.sqrt(1 - d.getRho() * d.getRho())]],
+                    controlPointsBase = [[1, 0],
+                        [1, k],
+                        [k, 1],
+                        [0, 1],
+                        [-k, 1],
+                        [-1, k],
+                        [-1, 0],
+                        [-1, -k],
+                        [-k, -1],
+                        [0, -1],
+                        [k, -1],
+                        [1, -k],
+                        [1, 0]];
+
+                var line = d3.svg.line()
+                    .x(function(datum) {
+                        return x(datum[0] + d.getX());
+                    })
+                    .y(function(datum) {
+                        return y(datum[1] + d.getY());
+                    })
+                    .interpolate(function(points) {
+                        var i = 1, path = [points[0][0], ",", points[0][1]];
+                        while (i + 3 <= points.length) {
+                            cubicBezier(path, points[i++], points[i++], points[i++]);
+                        }
+                        return path.join("");
+                    });
+
+                return line(numeric.dot(controlPointsBase, r));
+            });
+
+            dots.attr("cx", function(d) {
+                return x(d.getX());
+            })
+                .attr("cy", function(d) {
+                    return y(d.getY());
+                });
+
+            svg.selectAll(".x.axis").call(xAxis);
+            svg.selectAll(".y.axis").call(yAxis);
+
+            // exit
+            ellipses.exit().remove();
+            dots.exit().remove();
+        }
+
+        function applyZoom() {
+            var zoom = d3.behavior.zoom()
+                .x(x)
+                .y(y)
+                .scaleExtent([.1, 25])
+                .on("zoom", function() {
+                    var t = zoom.translate(),
+                        tx = t[0],
+                        ty = t[1];
+
+                    if (x.domain()[0] < 0)
+                        tx += x.range()[0] - x(0);
+                    if (y.domain()[0] < 0)
+                        ty += y.range()[0] - y(0);
+                    zoom.translate([tx, ty]);
+
+                    update(data);
+                });
+
+            svg.call(zoom);
+        }
+
+        function fitPlot() {
+            x.domain([d3.min(data, function(d) {
+                    return d.getX() - d.getSigmaX();
+                }),
+                d3.max(data, function(d) {
+                    return d.getX() + d.getSigmaX();
+                })]).nice();
+            y.domain([d3.min(data, function(d) {
+                    return d.getY() - d.getSigmaY();
+                }),
+                d3.max(data, function(d) {
+                    return d.getY() + d.getSigmaY();
+                })]).nice();
+
+            update(data);
+            applyZoom();
+        }
+    </script>

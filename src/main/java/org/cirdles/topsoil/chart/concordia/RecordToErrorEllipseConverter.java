@@ -40,10 +40,10 @@ public class RecordToErrorEllipseConverter implements DataConverter<ErrorEllipse
     private final Field<Number> yField;
     private final Field<Number> sigmaYField;
     private final Field<Number> rhoField;
-    
+
     private double errorSizeSigmaX = 1;
     private ExpressionType expressionTypeSigmaX = ExpressionType.ABSOLUTE;
-    
+
     private double errorSizeSigmaY = 1;
     private ExpressionType expressionTypeSigmaY = ExpressionType.ABSOLUTE;
 
@@ -80,7 +80,33 @@ public class RecordToErrorEllipseConverter implements DataConverter<ErrorEllipse
     public ErrorEllipse convert(Data data) {
         Record record = (Record) data.getExtraValue();
 
-        return new ErrorEllipse() {
+        return new MyErrorEllipse(record, xField, sigmaXField, yField, sigmaYField, rhoField, errorSizeSigmaX, errorSizeSigmaY, expressionTypeSigmaX, expressionTypeSigmaY);
+    }
+
+    public static class MyErrorEllipse extends ErrorEllipse {
+        private Record record;
+        private Field<Number> xField;
+        private Field<Number> sigmaXField;
+        private Field<Number> yField;
+        private Field<Number> sigmaYField;
+        private Field<Number> rhoField;
+        private double errorSizeSigmaX;
+        private double errorSizeSigmaY;
+        private ExpressionType expressionTypeSigmaX;
+        private ExpressionType expressionTypeSigmaY;
+
+        public MyErrorEllipse(Record record, Field<Number> xField, Field<Number> sigmaXField, Field<Number> yField, Field<Number> sigmaYField, Field<Number> rhoField, double errorSizeSigmaX, double errorSizeSigmaY, ExpressionType expressionTypeSigmaX, ExpressionType expressionTypeSigmaY) {
+            this.record = record;
+            this.xField = xField;
+            this.sigmaXField = sigmaXField;
+            this.yField = yField;
+            this.sigmaYField = sigmaYField;
+            this.rhoField = rhoField;
+            this.errorSizeSigmaX = errorSizeSigmaX;
+            this.errorSizeSigmaY = errorSizeSigmaY;
+            this.expressionTypeSigmaX = expressionTypeSigmaX;
+            this.expressionTypeSigmaY = expressionTypeSigmaY;
+        }
 
             @Override
             public double getX() {
@@ -113,7 +139,7 @@ public class RecordToErrorEllipseConverter implements DataConverter<ErrorEllipse
             public boolean getSelected() {
                 return record.getSelected();
             }
-        };
+        
     }
 
     /**
@@ -171,4 +197,4 @@ public class RecordToErrorEllipseConverter implements DataConverter<ErrorEllipse
     public void setExpressionTypeSigmaY(ExpressionType expressionTypeSigmaY) {
         this.expressionTypeSigmaY = expressionTypeSigmaY;
     }
-}
+    }

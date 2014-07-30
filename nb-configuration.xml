@@ -38,5 +38,12 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-editor-indent.CodeStyle.project.expand-tabs>true</org-netbeans-modules-editor-indent.CodeStyle.project.expand-tabs>
         <org-netbeans-modules-editor-indent.CodeStyle.usedProfile>project</org-netbeans-modules-editor-indent.CodeStyle.usedProfile>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAnnotations>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAnnotations>
+        <org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.text-line-wrap>none</org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.text-line-wrap>
+        <org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.continuationIndentSize>4</org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.continuationIndentSize>
+        <org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.indent-shift-width>4</org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.indent-shift-width>
+        <org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.spaces-per-tab>4</org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.spaces-per-tab>
+        <org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.tab-size>8</org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.tab-size>
+        <org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.text-limit-width>80</org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.text-limit-width>
+        <org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.expand-tabs>true</org-netbeans-modules-editor-indent.text.javascript.CodeStyle.project.expand-tabs>
     </properties>
 </project-shared-configuration>
