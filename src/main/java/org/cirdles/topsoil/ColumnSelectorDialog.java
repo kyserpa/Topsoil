@@ -47,6 +47,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import netscape.javascript.JSObject;
 import org.cirdles.topsoil.builder.TopsoilBuilderFactory;
+import org.cirdles.topsoil.chart.CorrelatedUncertaintyXYDataPoint;
 import org.cirdles.topsoil.chart.concordia.ErrorEllipse;
 import org.cirdles.topsoil.chart.concordia.RecordToErrorEllipseConverter;
 import org.cirdles.topsoil.table.Field;
@@ -169,15 +170,15 @@ public class ColumnSelectorDialog extends Dialog {
             return getSelection(choiceBoxX);
         }
 
-        public Field<Number> getSigmaXSelection() {
+        public Field<Number> getXUncertaintyField() {
             return getSelection(choiceBoxSigmaX);
         }
 
-        public double getSigmaXErrorSize() {
+        public double getXUncertaintyConfidence() {
             return getSelection(choiceBoxErrorSizeSigmaX);
         }
 
-        public ExpressionType getSigmaXExpressionType() {
+        public ExpressionType getXUncertaintyExpressionType() {
             return getSelection(choiceBoxExpressionTypeSigmaX);
         }
 
@@ -185,15 +186,15 @@ public class ColumnSelectorDialog extends Dialog {
             return getSelection(choiceBoxY);
         }
 
-        public Field<Number> getSigmaYSelection() {
+        public Field<Number> getYUncertaintyField() {
             return getSelection(choiceBoxSigmaY);
         }
 
-        public double getSigmaYErrorSize() {
+        public double getYUncertaintyConfidence() {
             return getSelection(choiceBoxErrorSizeSigmaY);
         }
 
-        public ExpressionType getSigmaYExpressionType() {
+        public ExpressionType getYUncertaintyExpressionType() {
             return getSelection(choiceBoxExpressionTypeSigmaY);
         }
 
@@ -219,24 +220,56 @@ public class ColumnSelectorDialog extends Dialog {
         public void handle(ActionEvent ae) {
             hide();
 
-            ColumnSelectorView columnSelector = (ColumnSelectorView) getContent();
+            final ColumnSelectorView columnSelector = (ColumnSelectorView) getContent();
             RecordToErrorEllipseConverter converter
-                    = new RecordToErrorEllipseConverter(columnSelector.getXSelection(), columnSelector.getSigmaXSelection(),
-                                                        columnSelector.getYSelection(), columnSelector.getSigmaYSelection(),
+                    = new RecordToErrorEllipseConverter(columnSelector.getXSelection(), columnSelector.getXUncertaintyField(),
+                                                        columnSelector.getYSelection(), columnSelector.getYUncertaintyField(),
                                                         columnSelector.getRhoSelection());
 
-            converter.setErrorSizeSigmaX(columnSelector.getSigmaXErrorSize());
-            converter.setExpressionTypeSigmaX(columnSelector.getSigmaXExpressionType());
-            converter.setErrorSizeSigmaY(columnSelector.getSigmaYErrorSize());
-            converter.setExpressionTypeSigmaY(columnSelector.getSigmaYExpressionType());
+            converter.setErrorSizeSigmaX(columnSelector.getXUncertaintyConfidence());
+            converter.setExpressionTypeSigmaX(columnSelector.getXUncertaintyExpressionType());
+            converter.setErrorSizeSigmaY(columnSelector.getYUncertaintyConfidence());
+            converter.setExpressionTypeSigmaY(columnSelector.getYUncertaintyExpressionType());
 
             Series<Number, Number> series = new Series<>();
-            ErrorEllipse[] data = new ErrorEllipse[table.getItems().size()];
+            CorrelatedUncertaintyXYDataPoint[] data = new CorrelatedUncertaintyXYDataPoint[table.getItems().size()];
             int i = 0;
 
             for (Record record : table.getItems()) {
-                series.getData().add(new Data<>(0, 0, record));
-                data[i++] = converter.convert(new Data<>(0, 0, record));
+                data[i++] = new CorrelatedUncertaintyXYDataPoint() {
+                    private final Field<Number> xField = columnSelector.getXSelection();
+                    private final Field<Number> sigmaXField = columnSelector.getXUncertaintyField();
+                    private final Field<Number> yField = columnSelector.getYSelection();
+                    private final Field<Number> sigmaYField = columnSelector.getYUncertaintyField();
+                    private final Field<Number> rhoField = columnSelector.getRhoSelection();
+
+                    @Override
+                    public double getX() {
+                        return record.getValue(xField).doubleValue();
+                    }
+
+                    @Override
+                    public double getSigmaX() {
+                        return record.getValue(sigmaXField).doubleValue() / columnSelector.getXUncertaintyConfidence()
+                                * (columnSelector.getXUncertaintyExpressionType() == ExpressionType.ABSOLUTE ? 1 : record.getValue(xField).doubleValue() / 100);
+                    }
+
+                    @Override
+                    public double getY() {
+                        return record.getValue(yField).doubleValue();
+                    }
+
+                    @Override
+                    public double getSigmaY() {
+                        return record.getValue(sigmaYField).doubleValue() / columnSelector.getYUncertaintyConfidence()
+                                * (columnSelector.getYUncertaintyExpressionType() == ExpressionType.ABSOLUTE ? 1 : record.getValue(yField).doubleValue() / 100);
+                    }
+
+                    @Override
+                    public double getRho() {
+                        return record.getValue(rhoField).doubleValue();
+                    }
+                }.wrap();
             }
 
             WebView chart = new WebView();
