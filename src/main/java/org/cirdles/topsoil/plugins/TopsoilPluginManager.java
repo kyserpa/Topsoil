@@ -46,7 +46,7 @@ public class TopsoilPluginManager extends SimplePluginManager<TopsoilPlugin> {
             Files.list(path).forEach(subpath -> {
                 if (subpath.toString().endsWith(".js")) { // different than subpath.endsWith(".js")
                     try {
-                        charts.add(new TopsoilJavaScriptChart(subpath));
+                        charts.add(new JavaScriptTopsoilChart(subpath));
                     } catch (IOException | ScriptException ex) {
                         Logger.getLogger(TopsoilPluginManager.class.getName()).log(Level.SEVERE, null, ex);
                     }

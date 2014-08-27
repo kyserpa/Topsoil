@@ -44,8 +44,8 @@ public class TopsoilPluginManagerTest {
         TopsoilPluginManager manager = new TopsoilPluginManager(pluginPath);
 
         // grab the only plugin there
-        assertEquals(1, manager.getPlugins().size());
-        TopsoilPlugin plugin = (TopsoilPlugin) manager.loadPlugins().toArray()[0];
+        assertEquals(1, manager.loadPlugins().size());
+        TopsoilPlugin plugin = (TopsoilPlugin) manager.getPlugins().toArray()[0];
 
         // plugin has two charts, Test #1 and Test #2
         assertEquals(2, plugin.getCharts().size());

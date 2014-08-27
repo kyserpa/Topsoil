@@ -29,34 +29,32 @@ import javax.script.ScriptException;
  *
  * @author johnzeringue
  */
-public class TopsoilJavaScriptChart implements TopsoilChart {
+public class JavaScriptTopsoilChart implements TopsoilChart {
 
     private static final ScriptEngineManager SCRIPT_ENGINE_MANAGER = new ScriptEngineManager();
 
     private final ScriptEngine javaScriptEngine;
 
-    public TopsoilJavaScriptChart(Path javaScriptFile) throws IOException, ScriptException {
+    public JavaScriptTopsoilChart(Path javaScriptFile) throws IOException, ScriptException {
         javaScriptEngine = SCRIPT_ENGINE_MANAGER.getEngineByName("nashorn");
         javaScriptEngine.eval(Files.newBufferedReader(javaScriptFile));
     }
 
     @Override
     public Optional<String> getName() {
-        try {
-            return Optional.ofNullable((String) javaScriptEngine.eval("chart.name"));
-        } catch (ScriptException ex) {
-            Logger.getLogger(TopsoilJavaScriptChart.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return Optional.empty();
+        return getStringProperty("chart.name");
     }
 
     @Override
     public Optional<String> getCategory() {
+        return getStringProperty("chart.category");
+    }
+    
+    private Optional<String> getStringProperty(String propertyName) {
         try {
-            return Optional.ofNullable((String) javaScriptEngine.eval("chart.category"));
+            return Optional.ofNullable((String) javaScriptEngine.eval(propertyName));
         } catch (ScriptException ex) {
-            Logger.getLogger(TopsoilJavaScriptChart.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(JavaScriptTopsoilChart.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         return Optional.empty();
