@@ -44,7 +44,7 @@ public class TopsoilPluginManager extends SimplePluginManager<TopsoilPlugin> {
 
             // convert JavaScript files into Topsoil charts
             Files.list(path).forEach(subpath -> {
-                if (subpath.toString().endsWith(".js")) { // different than subpath.endsWith(".js")
+                if (subpath.toString().toLowerCase().endsWith(".js")) { // different than subpath.endsWith(".js")
                     try {
                         charts.add(new JavaScriptTopsoilChart(subpath));
                     } catch (IOException | ScriptException ex) {
