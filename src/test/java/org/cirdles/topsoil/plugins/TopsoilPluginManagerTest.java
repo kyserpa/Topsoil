@@ -15,7 +15,6 @@
  */
 package org.cirdles.topsoil.plugins;
 
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import static org.junit.Assert.*;
@@ -50,15 +49,20 @@ public class TopsoilPluginManagerTest {
         // plugin has two charts, Test #1 and Test #2
         assertEquals(2, plugin.getCharts().size());
         plugin.getCharts().stream().forEach(chart -> {
-            chart.getName().ifPresent(name -> {
-                if (name.equals("Test #1")) {
+            switch (chart.getName()) {
+                case "Test #1":
+                    // Test #1 should have a category, Test
                     assertEquals(chart.getCategory().get(), "Test");
-                } else if (name.equals("Test #2")) {
+                    break;
+                case "Test #2":
+                    // Test #2 should not
                     assertFalse(chart.getCategory().isPresent());
-                } else {
+                    break;
+                default:
+                    // no other charts should be loaded
                     fail("Unexpected chart name");
-                }
-            });
+                    break;
+            }
         });
     }
 

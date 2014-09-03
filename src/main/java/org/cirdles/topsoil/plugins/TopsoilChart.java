@@ -22,10 +22,15 @@ import java.util.Optional;
  *
  * @author johnzeringue
  */
-public interface TopsoilChart {
+public interface TopsoilChart extends Comparable<TopsoilChart> {
     
-    public Optional<String> getName();
+    public String getName();
     
     public Optional<String> getCategory();
+
+    @Override
+    public default int compareTo(TopsoilChart topsoilChart) {
+        return getName().compareTo(topsoilChart.getName());
+    }
     
 }

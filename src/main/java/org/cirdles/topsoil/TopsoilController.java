@@ -19,9 +19,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.ResourceBundle;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static java.util.stream.Collectors.groupingBy;
@@ -30,7 +28,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
 import org.cirdles.topsoil.plugins.TopsoilPluginManager;
@@ -62,43 +59,53 @@ public class TopsoilController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         dataTable.setSavePath(Topsoil.LAST_TABLE_PATH);
         dataTable.load();
-        
+
         buildChartsMenu();
     }
 
     public void buildChartsMenu() {
+        String defaultCategory = "Other"; // used when the category is unspecified
         Path pluginsPath = Topsoil.TOPSOIL_PATH.resolve("Plugins");
 
-        if (Files.exists(pluginsPath)) {
-            TopsoilPluginManager pluginManager = new TopsoilPluginManager(pluginsPath);
+        if (Files.exists(pluginsPath)) { // no plugins path, no plugins
 
-            pluginManager.loadPlugins().stream()
+            new TopsoilPluginManager(pluginsPath).loadPlugins().stream()
+                    // reorganize charts by category
                     .flatMap(plugin -> plugin.getCharts().stream())
-                    .collect(groupingBy(chart -> chart.getCategory().orElse("Other")))
+                    .collect(groupingBy(chart -> chart.getCategory().orElse(defaultCategory)))
+                    // generate and populate a submenu for each category
                     .forEach((category, charts) -> {
                         Menu submenu = new Menu(category);
-                        
+
+                        // populate the new submenu
                         charts.stream()
-                                .sorted(by(chart -> chart.getName().get()))
-                                .forEach(chart -> submenu.getItems().add(new MenuItem(chart.getName().get())));
-                        
+                        .sorted() // by name
+                        .forEach(chart -> {
+                            MenuItem chartMenuItem = new MenuItem(chart.getName());
+                            chartMenuItem.setOnAction(event -> {
+                                // this is where the chart will be opened
+                                System.out.printf("Opening %s...\n", chart.getName());
+                            });
+
+                            submenu.getItems().add(chartMenuItem);
+                        });
+
                         chartsMenu.getItems().add(submenu);
                     });
-            
-            chartsMenu.getItems().sort((thisMenuItem, thatMenuItem) -> {
-                if (thisMenuItem.getText().equals("Other")) {
+
+            // sort the categories in the charts menu
+            chartsMenu.getItems().sort((menuItem1, menuItem2) -> {
+                // the default category should always appear last
+                if (menuItem1.getText().equals(defaultCategory)) {
                     return 1;
-                } else if (thatMenuItem.getText().equals("Other")) {
+                } else if (menuItem2.getText().equals(defaultCategory)) {
                     return -1;
-                } else {
-                    return thisMenuItem.getText().compareTo(thatMenuItem.getText());
                 }
+
+                // sort alphabetically otherwise
+                return menuItem1.getText().compareTo(menuItem2.getText());
             });
         }
-    }
-    
-    public static <T, K extends Comparable<K>> Comparator<T> by(Function<T, K> property) {
-        return (thisT, thatT) -> property.apply(thisT).compareTo(property.apply(thatT));
     }
 
     @FXML

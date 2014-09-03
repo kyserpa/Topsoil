@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -31,33 +29,28 @@ import javax.script.ScriptException;
  */
 public class JavaScriptTopsoilChart implements TopsoilChart {
 
+    private static final String JAVASCRIPT_ENGINE_NAME = "nashorn";
     private static final ScriptEngineManager SCRIPT_ENGINE_MANAGER = new ScriptEngineManager();
+    
+    private final String name;
+    private final Optional<String> category;
 
-    private final ScriptEngine javaScriptEngine;
-
-    public JavaScriptTopsoilChart(Path javaScriptFile) throws IOException, ScriptException {
-        javaScriptEngine = SCRIPT_ENGINE_MANAGER.getEngineByName("nashorn");
-        javaScriptEngine.eval(Files.newBufferedReader(javaScriptFile));
+    public JavaScriptTopsoilChart(Path javascriptFile) throws IOException, ScriptException {
+        ScriptEngine javascriptEngine = SCRIPT_ENGINE_MANAGER.getEngineByName(JAVASCRIPT_ENGINE_NAME);
+        javascriptEngine.eval(Files.newBufferedReader(javascriptFile));
+        
+        name = (String) javascriptEngine.eval("chart.name");
+        category = Optional.ofNullable((String) javascriptEngine.eval("chart.category"));
     }
 
     @Override
-    public Optional<String> getName() {
-        return getStringProperty("chart.name");
+    public String getName() {
+        return name;
     }
 
     @Override
     public Optional<String> getCategory() {
-        return getStringProperty("chart.category");
-    }
-    
-    private Optional<String> getStringProperty(String propertyName) {
-        try {
-            return Optional.ofNullable((String) javaScriptEngine.eval(propertyName));
-        } catch (ScriptException ex) {
-            Logger.getLogger(JavaScriptTopsoilChart.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return Optional.empty();
+        return category;
     }
 
 }

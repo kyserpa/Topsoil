@@ -63,7 +63,7 @@ public class Topsoil extends Application {
         ResourceBundle bundle = ResourceBundle.getBundle("org.cirdles.topsoil.Resources");
 
         // TopsoilMainWindow root = new TopsoilMainWindow(primaryStage);
-        Pane root = (Pane) FXMLLoader.load(getClass().getResource("topsoil.fxml"), bundle);
+        Pane root = (Pane) FXMLLoader.load(getClass().getResource("Topsoil.fxml"), bundle);
 
         primaryStage.setScene(new Scene(root));
         primaryStage.setTitle(String.format("%s [%s]",
