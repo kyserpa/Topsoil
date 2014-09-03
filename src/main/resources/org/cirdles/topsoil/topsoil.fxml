@@ -12,23 +12,18 @@
       prefWidth="1200"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.cirdles.topsoil.TopsoilController">
-    <MenuBar useSystemMenuBar="true" fx:id="menuBar">
-        <menus>
-            <Menu text="%fileMenu">
-                <items>
-                    <MenuItem text="%importFromTSV"
-                              onAction="#importFromFile" />
-                </items>
-            </Menu>
-        </menus>
+    <MenuBar useSystemMenuBar="true">
+        <Menu text="%fileMenu">
+            <MenuItem text="%importFromTSV"
+                      onAction="#importFromFile" />
+        </Menu>
+        <Menu text="Charts" fx:id="chartsMenu" />
     </MenuBar>
     <ToolBar>
-        <items>
-            <Button text="%createErrorEllipseChart"
-                    onAction="#createErrorChart" /> 
-            <Button text="%clearTableMessage"
-                    onAction="#emptyTable"/> 
-        </items>
+        <Button text="%createErrorEllipseChart"
+                onAction="#createErrorChart" /> 
+        <Button text="%clearTableMessage"
+                onAction="#emptyTable"/>
     </ToolBar>
     <TSVTable fx:id="dataTable"
               VBox.vgrow="ALWAYS">

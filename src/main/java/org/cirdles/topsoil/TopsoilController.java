@@ -50,7 +50,7 @@ public class TopsoilController implements Initializable {
 
     @FXML private Node root;
     @FXML private TSVTable dataTable;
-    @FXML private MenuBar menuBar;
+    @FXML private Menu chartsMenu;
 
     /**
      * Initializes the controller class.
@@ -67,7 +67,6 @@ public class TopsoilController implements Initializable {
     }
 
     public void buildChartsMenu() {
-        Menu chartsMenu = new Menu("Charts");
         Path pluginsPath = Topsoil.TOPSOIL_PATH.resolve("Plugins");
 
         if (Files.exists(pluginsPath)) {
@@ -86,8 +85,15 @@ public class TopsoilController implements Initializable {
                         chartsMenu.getItems().add(submenu);
                     });
             
-            chartsMenu.getItems().sort(by(MenuItem::getText));
-            menuBar.getMenus().add(chartsMenu);
+            chartsMenu.getItems().sort((thisMenuItem, thatMenuItem) -> {
+                if (thisMenuItem.getText().equals("Other")) {
+                    return 1;
+                } else if (thatMenuItem.getText().equals("Other")) {
+                    return -1;
+                } else {
+                    return thisMenuItem.getText().compareTo(thatMenuItem.getText());
+                }
+            });
         }
     }
     
