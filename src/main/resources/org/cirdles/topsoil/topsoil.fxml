@@ -12,7 +12,7 @@
       prefWidth="1200"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.cirdles.topsoil.TopsoilController">
-    <MenuBar useSystemMenuBar="true" >
+    <MenuBar useSystemMenuBar="true" fx:id="menuBar">
         <menus>
             <Menu text="%fileMenu">
                 <items>

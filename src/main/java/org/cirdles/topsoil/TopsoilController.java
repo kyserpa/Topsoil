@@ -17,15 +17,23 @@ package org.cirdles.topsoil;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static java.util.stream.Collectors.groupingBy;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
+import org.cirdles.topsoil.plugins.TopsoilPluginManager;
 import org.cirdles.topsoil.table.Record;
 import org.cirdles.topsoil.utils.TSVTableReader;
 import org.cirdles.topsoil.utils.TSVTableWriter;
@@ -40,10 +48,9 @@ import org.controlsfx.dialog.Dialogs;
  */
 public class TopsoilController implements Initializable {
 
-    @FXML
-    private Node root;
-    @FXML
-    private TSVTable dataTable;
+    @FXML private Node root;
+    @FXML private TSVTable dataTable;
+    @FXML private MenuBar menuBar;
 
     /**
      * Initializes the controller class.
@@ -55,6 +62,37 @@ public class TopsoilController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         dataTable.setSavePath(Topsoil.LAST_TABLE_PATH);
         dataTable.load();
+        
+        buildChartsMenu();
+    }
+
+    public void buildChartsMenu() {
+        Menu chartsMenu = new Menu("Charts");
+        Path pluginsPath = Topsoil.TOPSOIL_PATH.resolve("Plugins");
+
+        if (Files.exists(pluginsPath)) {
+            TopsoilPluginManager pluginManager = new TopsoilPluginManager(pluginsPath);
+
+            pluginManager.loadPlugins().stream()
+                    .flatMap(plugin -> plugin.getCharts().stream())
+                    .collect(groupingBy(chart -> chart.getCategory().orElse("Other")))
+                    .forEach((category, charts) -> {
+                        Menu submenu = new Menu(category);
+                        
+                        charts.stream()
+                                .sorted(by(chart -> chart.getName().get()))
+                                .forEach(chart -> submenu.getItems().add(new MenuItem(chart.getName().get())));
+                        
+                        chartsMenu.getItems().add(submenu);
+                    });
+            
+            chartsMenu.getItems().sort(by(MenuItem::getText));
+            menuBar.getMenus().add(chartsMenu);
+        }
+    }
+    
+    public static <T, K extends Comparable<K>> Comparator<T> by(Function<T, K> property) {
+        return (thisT, thatT) -> property.apply(thisT).compareTo(property.apply(thatT));
     }
 
     @FXML
