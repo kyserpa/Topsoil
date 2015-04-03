@@ -27,29 +27,29 @@ public class GetDocumentsDirectoryOperation extends PlatformDependentOperation<S
 
     @Override
     protected Path performOnWindows(String... params) {
-        if (params.length == 1 && !"".equals(params[0])) {
-            return Paths.get(System.getProperty("user.home"), "Documents", params[0]);
-        } else {
-            return Paths.get(System.getProperty("user.home"), "Documents");
-        }
+        return getPath(params);
     }
 
     @Override
     protected Path performOnMacOS(String... params) {
-        if (params.length == 1 && !"".equals(params[0])) {
-            return Paths.get(System.getProperty("user.home"), "Documents", params[0]);
-        } else {
-            return Paths.get(System.getProperty("user.home"), "Documents");
-        }
+        return getPath(params);
     }
 
     @Override
     protected Path performOnLinux(String... params) {
+        return getPath(params);
+    }
+    
+    /**
+     * 
+     * @param params  The folders within the users documents.
+     * @returns A path object representing the directory.
+     */
+    private getPath(String... params){
+
         if (params.length == 1 && !"".equals(params[0])) {
             return Paths.get(System.getProperty("user.home"), "Documents", params[0]);
         } else {
             return Paths.get(System.getProperty("user.home"), "Documents");
         }
     }
-   
-}
